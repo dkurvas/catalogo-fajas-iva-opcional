@@ -241,10 +241,10 @@ function add(p,size,qty){if(!qty||qty<1)return;qty=Math.min(9999,Math.floor(qty)
 function show(t){const m=document.getElementById("msg");m.textContent=t;m.style.display="block";setTimeout(()=>m.style.display="none",3500)}
 function rank(x){let a=x.sizes.indexOf(x.size);return a<0?99:a}
 function renderCart(){
- cart.sort((a,b)=>a.name.localeCompare(b.name)||rank(a)-rank(b));
+ cart.sort((a,b)=>cats.indexOf(a.cat)-cats.indexOf(b.cat)||products.findIndex(p=>p.cat===a.cat&&p.name===a.name)-products.findIndex(p=>p.cat===b.cat&&p.name===b.name)||rank(a)-rank(b));
  const r=document.getElementById("items");r.innerHTML="";
  if(!cart.length)r.innerHTML='<div class="note">Aún no has agregado productos.</div>';
- cart.forEach((x,i)=>{const d=document.createElement("div");d.className="line";d.innerHTML=`<div><b>${x.name}</b><br><span class="note">${x.size} · ${money(x.price)}</span></div><div class="mult">×</div><input class="qty" type="number" min="1" value="${x.qty}" inputmode="numeric"><div class="lineTotal">${money(x.price*x.qty)}</div><button class="remove" title="Eliminar">🗑</button>`;
+ cart.forEach((x,i)=>{const d=document.createElement("div");d.className="line";d.innerHTML=`<div><b>${x.name}${x.cat!=="COMPLEMENTOS"&&x.code?" – "+x.code:""}</b><br><span class="note">${x.size} · ${money(x.price)}</span></div><div class="mult">×</div><input class="qty" type="number" min="1" value="${x.qty}" inputmode="numeric"><div class="lineTotal">${money(x.price*x.qty)}</div><button class="remove" title="Eliminar">🗑</button>`;
  const qi=d.querySelector("input");qi.onfocus=e=>e.target.select();qi.onclick=e=>e.target.select();qi.onchange=e=>{x.qty=Math.max(1,+e.target.value||1);renderCart()};d.querySelector("button").onclick=()=>{cart.splice(i,1);renderCart()};r.appendChild(d)});calc()}
 function calc(){
  const sub=cart.reduce((a,x)=>a+x.price*x.qty,0), units=cart.reduce((a,x)=>a+x.qty,0);
@@ -272,7 +272,7 @@ document.getElementById("sendWhatsApp").addEventListener("click",()=>{
  const base=sub-discount;
  const ivaOn=document.getElementById("applyIva").checked;
  const iva=ivaOn?base*.16:0;
- const lines=["*D’KURVAS — COTIZACIÓN*", "Médico: "+doctor, "Dirección: "+address, "", "*Productos:*", ...cart.map(x=>"• "+x.name+(x.code?" ("+x.code+")":"")+" | Talla: "+x.size+" | Cantidad: "+x.qty+" | "+money(x.price*x.qty)),"", "*TOTAL DE UNIDADES: "+units+"*", "Subtotal: "+money(sub),"Descuento ("+(pct*100)+"%): -"+money(discount),"IVA 16%: "+(ivaOn?money(iva):"No aplicado"),"*TOTAL: "+money(base+iva)];
+ const lines=["*D’KURVAS — COTIZACIÓN*", "Médico: "+doctor, "Dirección: "+address, "", "*Productos:*", ...cart.map(x=>"• "+x.name+(x.cat!=="COMPLEMENTOS"&&x.code?" ("+x.code+")":"")+" | Talla: "+x.size+" | Cantidad: "+x.qty+" | "+money(x.price*x.qty)),"", "*TOTAL DE UNIDADES: "+units+"*", "Subtotal: "+money(sub),"Descuento ("+(pct*100)+"%): -"+money(discount),"IVA 16%: "+(ivaOn?money(iva):"No aplicado"),"*TOTAL: "+money(base+iva)];
  if(base>=25000){const choice=document.querySelector('input[name="lg"]:checked');lines.push("Logo médico: "+(choice?(choice.value==="si"?"Sí":"No"):"Sin seleccionar"));}
  const url="https://wa.me/525513324512?text="+encodeURIComponent(lines.join("\n"));
  window.open(url,"_blank","noopener,noreferrer");
