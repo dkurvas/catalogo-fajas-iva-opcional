@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Catálogo D'KURVAS V20 IVA</title>
+<title>Catálogo D'KURVAS V20 - WhatsApp</title>
 <style>
 body{font-family:Arial,sans-serif;margin:0;background:#f5f2ee;color:#292522}
 .wrap{max-width:760px;margin:auto;padding:18px}.top{text-align:center;margin-bottom:16px}
@@ -173,10 +173,10 @@ select,input{width:100%;box-sizing:border-box;padding:9px;margin:4px 0;border:1p
 <div id="sections"></div>
 <div class="order"><h3>MI PEDIDO</h3><div id="items"><div class="note">Aún no has agregado productos.</div></div>
 <div class="totals">
-<div class="row" style="font-weight:800;padding:8px 0 10px;border-bottom:1px solid #eee;margin-bottom:7px"><span>TOTAL DE UNIDADES</span><b id="units">0</b></div>
+<div class="row" style="font-weight:800;border-bottom:1px solid #e8e3dd;padding-bottom:10px;margin-bottom:8px"><span>TOTAL DE UNIDADES</span><b id="unitsTotal">0</b></div>
 <div class="row"><span>Subtotal</span><b id="sub">$0.00</b></div>
 <div class="row discountrow"><span id="discLabel">Descuento</span><b id="disc">$0.00</b></div>
-<div class="iva"><span class="ivalabel">IVA 16%</span><b id="ivaval">$0.00</b></div>
+<div class="iva"><label class="ivalabel"><input id="applyIva" type="checkbox" checked> IVA 16%</label><b id="ivaval">$0.00</b></div>
 <div class="row totalrow"><span>TOTAL</span><b id="total">$0.00</b></div>
 <div id="logo" class="logo"><b>Beneficio por compra desde $25,000 después del descuento</b><br>
 ¿Desea incluir logo médico?
@@ -249,13 +249,13 @@ function renderCart(){
 function calc(){
  const sub=cart.reduce((a,x)=>a+x.price*x.qty,0), units=cart.reduce((a,x)=>a+x.qty,0);
  let pct=0;if(units>=6){if(sub>=40000)pct=.5;else if(sub>=25000)pct=.4;else pct=.2}
- const dis=sub*pct, base=sub-dis, iv=(base*.16);
- document.getElementById("units").textContent=units;
+ const dis=sub*pct, base=sub-dis, iv=(document.getElementById("applyIva")?.checked ? base*.16 : 0);
+ document.getElementById("unitsTotal").textContent=units;
  subEl=document.getElementById("sub");subEl.textContent=money(sub);document.getElementById("discLabel").textContent=pct?`Descuento (${pct*100}%)`:"Descuento";document.getElementById("disc").textContent=money(dis);
  document.getElementById("ivaval").textContent=money(iv);document.getElementById("total").textContent=money(base+iv);
  document.getElementById("logo").style.display=base>=25000?"block":"none";
 }
-
+document.getElementById("applyIva").addEventListener("change", calc);
 
 // V20: generar resumen directamente en WhatsApp, sin guardar información en servidores.
 document.getElementById("sendWhatsApp").addEventListener("click",()=>{
@@ -270,8 +270,9 @@ document.getElementById("sendWhatsApp").addEventListener("click",()=>{
  if(units>=6){if(sub>=40000)pct=.5;else if(sub>=25000)pct=.4;else pct=.2;}
  const discount=sub*pct;
  const base=sub-discount;
- const iva=base*.16;
- const lines=["*D’KURVAS — COTIZACIÓN*", "Médico: "+doctor, "Dirección: "+address, "", "*Productos:*", ...cart.map(x=>"• "+x.name+(x.code?" ("+x.code+")":"")+" | Talla: "+x.size+" | Cantidad: "+x.qty+" | "+money(x.price*x.qty)),"", "*TOTAL DE UNIDADES: "+units+"*", "", "Subtotal: "+money(sub),"Descuento ("+(pct*100)+"%): -"+money(discount),"IVA 16%: "+money(iva),"*TOTAL: "+money(base+iva)];
+ const ivaOn=document.getElementById("applyIva").checked;
+ const iva=ivaOn?base*.16:0;
+ const lines=["*D’KURVAS — COTIZACIÓN*", "Médico: "+doctor, "Dirección: "+address, "", "*Productos:*", ...cart.map(x=>"• "+x.name+(x.code?" ("+x.code+")":"")+" | Talla: "+x.size+" | Cantidad: "+x.qty+" | "+money(x.price*x.qty)),"", "*TOTAL DE UNIDADES: "+units+"*", "Subtotal: "+money(sub),"Descuento ("+(pct*100)+"%): -"+money(discount),"IVA 16%: "+(ivaOn?money(iva):"No aplicado"),"*TOTAL: "+money(base+iva)];
  if(base>=25000){const choice=document.querySelector('input[name="lg"]:checked');lines.push("Logo médico: "+(choice?(choice.value==="si"?"Sí":"No"):"Sin seleccionar"));}
  const url="https://wa.me/525513324512?text="+encodeURIComponent(lines.join("\n"));
  window.open(url,"_blank","noopener,noreferrer");
